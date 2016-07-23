@@ -35,8 +35,10 @@ namespace WebUI.SignalR
             var collection = db.GetCollection<Record>("record");
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            var data = collection.FindAll().OrderByDescending(e => e.Time)
-                .Take(180)
+            var data = collection
+                .Find(Query.Empty)
+                .SetSortOrder(SortBy<Record>.Descending(e=>e.Time))
+                .SetLimit(180)                
                 .ToList()
                 .OrderBy(e => e.Time)
                 .ToList();
@@ -100,7 +102,10 @@ namespace WebUI.SignalR
                         var collection = db.GetCollection<Record>("record");
                         Stopwatch watch = new Stopwatch();
                         watch.Start();
-                        var json = collection.FindAll().OrderByDescending(c => c.Time).FirstOrDefault();
+                        var json = collection.Find(Query.Empty)
+                        .SetSortOrder(SortBy<Record>.Descending(d=>d.Time))
+                        .SetLimit(1)                        
+                        .FirstOrDefault();
                         if (json != null)
                         {
                             json.Time = json.Time.ToLocalTime();

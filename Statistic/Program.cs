@@ -13,6 +13,8 @@ using Microsoft.VisualBasic.Devices;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Model;
+using MongoDB.Driver.Builders;
+using Thread = System.Threading.Thread;
 
 namespace Statistic
 {
@@ -25,62 +27,76 @@ namespace Statistic
             MongoServer server = new MongoServer(settings);
             MongoDatabase db = server.GetDatabase("Computer_Profiler_Statistic");
             var collection = db.GetCollection<Record>("record");
-            Computer computer = new Computer();
-            while (true)
-            {                  
-                Record record = new Record()
-                {
-                    Cpu = new Cpu()
-                    {
-                        Utilization = computer.CpuUtilization,
-                    },
-                    Ram = new Ram()
-                    {
-                        Utilization = computer.RamUtilization
-                    },
-                    Process = new Model.Process()
-                    {
-                        Number = computer.ProcessCount,
-                    },
-                    Thread = new Model.Thread()
-                    {
-                        Number= computer.ThreadCount
-                    },
-                    Net = new Net()
-                    {
-                        Measurement = "Kbps"
-                    }
-                };                
+            
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    var s = collection
+            //    .Find(Query.Empty)
+            //    .SetSortOrder(SortBy<Record>.Descending(e => e.Time))
+            //    .SetLimit(1)
+            //    .ToList()
+            //    .OrderBy(e => e.Time)
+            //    .ToList();                
+            //}
 
-                double download = 0;
-                double upload = 0;
 
-                record.Net.Item = new List<NetItem>();
 
-                foreach (NetworkAdapter adapter in computer.NetWorks)
-                {
-                    record.Net.Item.Add(new NetItem()
-                    {
-                        Name = adapter.Name,
-                        Download = adapter.DownloadSpeedKbps,
-                        Upload = adapter.UploadSpeedKbps,
-                    });
-                    if (adapter.DownloadSpeedKbps > download)
-                    {
-                        download = adapter.DownloadSpeedKbps;
-                    }
-                    if (adapter.UploadSpeedKbps > upload)
-                    {
-                        upload = adapter.UploadSpeedKbps;
-                    }
-                }                
-                record.Net.Download = download;
-                record.Net.Upload = upload;
-                collection.Insert(record);
+            //Computer computer = new Computer();
+            //while (true)
+            //{                  
+            //    Record record = new Record()
+            //    {
+            //        Cpu = new Cpu()
+            //        {
+            //            Utilization = computer.CpuUtilization,
+            //        },
+            //        Ram = new Ram()
+            //        {
+            //            Utilization = computer.RamUtilization
+            //        },
+            //        Process = new Model.Process()
+            //        {
+            //            Number = computer.ProcessCount,
+            //        },
+            //        Thread = new Model.Thread()
+            //        {
+            //            Number= computer.ThreadCount
+            //        },
+            //        Net = new Net()
+            //        {
+            //            Measurement = "Kbps"
+            //        }
+            //    };                
 
-                Console.WriteLine(DateTime.Now);
-                System.Threading.Thread.Sleep(1000);
-            }
+            //    double download = 0;
+            //    double upload = 0;
+
+            //    record.Net.Item = new List<NetItem>();
+
+            //    foreach (NetworkAdapter adapter in computer.NetWorks)
+            //    {
+            //        record.Net.Item.Add(new NetItem()
+            //        {
+            //            Name = adapter.Name,
+            //            Download = adapter.DownloadSpeedKbps,
+            //            Upload = adapter.UploadSpeedKbps,
+            //        });
+            //        if (adapter.DownloadSpeedKbps > download)
+            //        {
+            //            download = adapter.DownloadSpeedKbps;
+            //        }
+            //        if (adapter.UploadSpeedKbps > upload)
+            //        {
+            //            upload = adapter.UploadSpeedKbps;
+            //        }
+            //    }                
+            //    record.Net.Download = download;
+            //    record.Net.Upload = upload;
+            //    collection.Insert(record);
+
+            //    Console.WriteLine(DateTime.Now);
+            //    System.Threading.Thread.Sleep(1000);
+            //}
 
         }
     }
