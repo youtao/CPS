@@ -1,0 +1,233 @@
+﻿
+@{
+    ViewBag.Title = "实时显示";
+}
+@section style{
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Microsoft YaHei';
+        }
+    </style>
+}
+@section part_script{
+    <script src="~/Scripts/vue.min.js"></script>
+    <script src="~/Scripts/highcharts/4.2.0/highcharts.js"></script>
+    <script src="/Scripts/jquery.signalR-2.2.1.min.js"></script>
+    <script src="~/Scripts/highcharts/4.2.0/themes/dark-unica.js"></script>
+    <script src="/signalr/hubs"></script>
+}
+
+@section cust_script{
+    <script>
+        $(function () {
+            var vue = new Vue({
+                el: '#text-show',
+                data: {
+                    cpu: 0,
+                    ram: 0,
+                    download: 0,
+                    upload: 0,
+                    process: 0,
+                    thread: 0
+                }
+            });
+
+            var chartHub = $.connection.chartHub;
+            chartHub.client.start = function (response, time) {
+                console.log(response);
+                console.log(time);
+
+                initChart(response);
+            };
+            chartHub.client.update = function (response, time) {
+                console.log(response);
+                console.log(time);
+                updateChart(response);
+            };
+            $.connection.hub.start().done(function () {
+
+            });
+
+            function initChart(data) {
+                $('#chart')
+                    .highcharts({
+                        chart: {
+                            type: 'spline'
+                        },
+                        title: {
+                            text: 'Computer Profiler Statistic'
+                        },
+                        tooltip: {
+                            shared: true
+                        },
+                        credits: {
+                            enabled: false
+                        },
+                        xAxis: {
+                            type: 'datetime',
+                            title: {
+                                text: '时间'
+                            },
+                            labels: {
+                                formatter: function () {
+                                    return Highcharts.dateFormat('%M:%S', this.value);
+                                }
+                            }
+                        },
+                        yAxis: [{
+                            min: 0,
+                            max: 100,
+                            title: {
+                                text: '利用率'
+                            }
+                        }, {
+                            opposite: true,
+                            labels: {
+                                formatter: function () {
+                                    return this.value + ' kb/s';
+                                }
+                            },
+                            title: {
+                                text: '网速Kbps'
+                            }
+                        }, {
+                            opposite: true,
+                            title: {
+                                text: '数量'
+                            }
+                        }],
+
+                        plotOptions:
+                        {
+                            spline: {
+                                lineWidth: 1,
+                                marker: {
+                                    enabled: false
+                                }
+                            }
+                        },
+                        series: [{
+                            name: 'cpu',
+                            yAxis: 0,
+                            data: function () {
+                                var res = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    res.push({
+                                        x: Date.parse(data[i].Time),
+                                        y: parseInt(data[i].Cpu.Utilization)
+                                    });
+                                }
+                                return res;
+                            }()
+                        }, {
+                            name: '内存',
+                            yAxis: 0,
+                            data: function () {
+                                var res = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    res.push({
+                                        x: Date.parse(data[i].Time),
+                                        y: parseInt(data[i].Ram.Utilization)
+                                    });
+                                }
+                                return res;
+                            }()
+                        }, {
+                            name: '下载速度',
+                            yAxis: 1,
+                            data: function () {
+                                var res = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    res.push({
+                                        x: Date.parse(data[i].Time),
+                                        y: parseInt(data[i].Net.Download)
+                                    });
+                                }
+                                return res;
+                            }()
+                        }, {
+                            name: '上传速度',
+                            yAxis: 1,
+                            data: function () {
+                                var res = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    res.push({
+                                        x: Date.parse(data[i].Time),
+                                        y: parseInt(data[i].Net.Upload)
+                                    });
+                                }
+                                return res;
+                            }()
+                        }, {
+                            name: '进程',
+                            yAxis: 2,
+                            data: function () {
+                                var res = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    res.push({
+                                        x: Date.parse(data[i].Time),
+                                        y: data[i].Process.Number
+                                    });
+                                }
+                                return res;
+                            }()
+                        }, {
+                            name: '线程',
+                            yAxis: 2,
+                            data: function () {
+                                var res = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    res.push({
+                                        x: Date.parse(data[i].Time),
+                                        y: data[i].Thread.Number
+                                    });
+                                }
+                                return res;
+                            }()
+                        }]
+                    });
+            }
+
+            function updateChart(data) {
+                var chart = $('#chart').highcharts();
+                if (chart) {
+                    vue.cpu = parseInt(data.Cpu.Utilization);
+                    vue.ram = parseInt(data.Ram.Utilization);
+                    vue.download = parseInt(data.Net.Download);
+                    vue.upload = parseInt(data.Net.Upload);
+                    vue.process = data.Process.Number;
+                    vue.thread = data.Thread.Number;
+                    var series = chart.series;
+                    series[0].addPoint([Date.parse(data.Time), parseInt(data.Cpu.Utilization)], true, true);
+                    series[1].addPoint([Date.parse(data.Time), parseInt(data.Ram.Utilization)], true, true);
+                    series[2].addPoint([Date.parse(data.Time), parseInt(data.Net.Download)], true, true);
+                    series[3].addPoint([Date.parse(data.Time), parseInt(data.Net.Upload)], true, true);
+                    series[4].addPoint([Date.parse(data.Time), data.Process.Number], true, true);
+                    series[5].addPoint([Date.parse(data.Time), data.Thread.Number], true, true);
+                }
+            }
+        });
+    </script>
+}
+<ul id="text-show" style="margin-top: 10px;">
+    <li style="display: inline;">
+        <i class="fa fa-chrome"></i>cpu:{{cpu}}%
+    </li>
+    <li style="display: inline;">
+        <i class="fa fa-chrome"></i>内存:{{ram}}%
+    </li>
+    <li style="display: inline;">
+        <i class="fa fa-chrome"></i>下载:{{download}} kb/s
+    </li>
+    <li style="display: inline;">
+        <i class="fa fa-chrome"></i>上传:{{upload}} kb/s
+    </li>
+    <li style="display: inline;">
+        <i class="fa fa-chrome"></i>进程:{{process}}
+    </li>
+    <li style="display: inline;">
+        <i class="fa fa-chrome"></i>线程:{{thread}}
+    </li>
+</ul>
+<div id="chart" style="height:500px;width:100%;"></div>
