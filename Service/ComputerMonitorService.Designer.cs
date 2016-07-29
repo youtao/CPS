@@ -1,6 +1,6 @@
-﻿namespace StatisticService
+﻿namespace Service
 {
-    partial class ProfilerService
+    partial class ComputerMonitorService
     {
         /// <summary> 
         /// 必需的设计器变量。
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            this.ServiceName = "ProfilerService";
+            this.ServiceName = "ComputerMonitorService";
         }
 
         #endregion

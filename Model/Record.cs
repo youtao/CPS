@@ -28,22 +28,27 @@ namespace Model
 
         public Net Net { get; set; }
     }
+
     public class Cpu
     {
         public float Utilization { get; set; }
     }
+
     public class Ram
     {
         public float Utilization { get; set; }
     }
+
     public class Process
     {
-        public int Number { get; set; }        
+        public int Number { get; set; }
     }
+
     public class Thread
     {
         public int Number { get; set; }
     }
+
     public class Net
     {
         public string Measurement { get; set; }

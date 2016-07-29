@@ -27,9 +27,11 @@ namespace WebUI.SignalR
 
         public override Task OnConnected()
         {
-            Interlocked.Increment(ref this.broadcaster.ConnectNumber);            
-            MongoServerSettings settings = new MongoServerSettings();
-            settings.Server = new MongoServerAddress("localhost", 27017);
+            Interlocked.Increment(ref this.broadcaster.ConnectNumber);
+            MongoServerSettings settings = new MongoServerSettings()
+            {
+                Server = new MongoServerAddress("localhost")
+            };
             MongoServer server = new MongoServer(settings);
             MongoDatabase db = server.GetDatabase("Computer_Profiler_Statistic");
             var collection = db.GetCollection<Record>("record");
@@ -37,15 +39,15 @@ namespace WebUI.SignalR
             watch.Start();
             var data = collection
                 .Find(Query.Empty)
-                .SetSortOrder(SortBy<Record>.Descending(e=>e.Time))
-                .SetLimit(180)                
+                .SetSortOrder(SortBy<Record>.Descending(e => e._id))
+                .SetLimit(300)
                 .ToList()
                 .OrderBy(e => e.Time)
                 .ToList();
             foreach (var item in data)
             {
                 item.Time = item.Time.ToLocalTime();
-            }            
+            }
 
             watch.Stop();
             Clients.Caller.Start(data, watch.Elapsed.Milliseconds);
@@ -55,10 +57,10 @@ namespace WebUI.SignalR
 
         public override Task OnDisconnected(bool stopCalled)
         {
-            if (this.broadcaster.ConnectNumber>0)
+            if (this.broadcaster.ConnectNumber > 0)
             {
                 Interlocked.Decrement(ref this.broadcaster.ConnectNumber);
-            }                  
+            }
             return base.OnDisconnected(stopCalled);
         }
     }
@@ -95,26 +97,25 @@ namespace WebUI.SignalR
                 {
                     if (ConnectNumber > 0)
                     {
-                        MongoServerSettings settings = new MongoServerSettings();
-                        settings.Server = new MongoServerAddress("localhost", 27017);
+                        MongoServerSettings settings = new MongoServerSettings()
+                        {
+                            Server = new MongoServerAddress("localhost")
+                        };
                         MongoServer server = new MongoServer(settings);
                         MongoDatabase db = server.GetDatabase("Computer_Profiler_Statistic");
                         var collection = db.GetCollection<Record>("record");
-                        Stopwatch watch = new Stopwatch();
-                        watch.Start();
                         var json = collection.Find(Query.Empty)
-                        .SetSortOrder(SortBy<Record>.Descending(d=>d.Time))
-                        .SetLimit(1)                        
+                        .SetSortOrder(SortBy<Record>.Descending(d => d._id))
+                        .SetLimit(1)
                         .FirstOrDefault();
                         if (json != null)
                         {
                             json.Time = json.Time.ToLocalTime();
                         }
-                        watch.Stop();
-                        this.hubContext.Clients.All.update(json, watch.Elapsed.Milliseconds);
+                        this.hubContext.Clients.All.update(json);
                     }
                 }
-                
+
             }, null, this.interval, this.interval);
         }
     }
