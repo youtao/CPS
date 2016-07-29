@@ -13,6 +13,7 @@
 @section part_script{
     <script src="~/Scripts/vue.min.js"></script>
     <script src="~/Scripts/highcharts/4.2.0/highcharts.js"></script>
+    <script src="~/Scripts/highcharts/4.2.0/highcharts-more.js"></script>
     <script src="/Scripts/jquery.signalR-2.2.1.min.js"></script>
     <script src="~/Scripts/highcharts/4.2.0/themes/dark-unica.js"></script>
     <script src="/signalr/hubs"></script>
@@ -29,7 +30,8 @@
                     download: 0,
                     upload: 0,
                     process: 0,
-                    thread: 0
+                    thread: 0,
+                    cpuTemperature:0
                 }
             });
 
@@ -50,143 +52,241 @@
             });
 
             function initChart(data) {
-                $('#chart')
-                    .highcharts({
-                        chart: {
-                            type: 'spline'
+                $('#chart').highcharts({
+                    chart: {
+                        type: 'spline'
+                    },
+                    title: {
+                        text: 'Computer Profiler Statistic'
+                    },
+                    tooltip: {
+                        shared: true
+                    },
+                    credits: {
+                        enabled: false
+                    },
+
+                    xAxis: {
+                        type: 'datetime',
+                        title: {
+                            text: '时间'
+                        },
+                        labels: {
+                            formatter: function () {
+                                return Highcharts.dateFormat('%M:%S', this.value);
+                            }
+                        }
+                    },
+                    yAxis: [{
+                        min: 0,
+                        max: 100,
+                        title: {
+                            text: '利用率'
+                        }
+                    }, {
+                        opposite: true,
+                        labels: {
+                            formatter: function () {
+                                return this.value + ' kb/s';
+                            }
                         },
                         title: {
-                            text: 'Computer Profiler Statistic'
-                        },
-                        tooltip: {
-                            shared: true
-                        },
-                        credits: {
-                            enabled: false
-                        },
-                        xAxis: {
-                            type: 'datetime',
-                            title: {
-                                text: '时间'
-                            },
-                            labels: {
-                                formatter: function () {
-                                    return Highcharts.dateFormat('%M:%S', this.value);
-                                }
+                            text: '网速Kbps'
+                        }
+                    }, {
+                        opposite: true,
+                        title: {
+                            text: '数量'
+                        }
+                    }],
+                    plotOptions:
+                    {
+                        spline: {
+                            lineWidth: 1,
+                            marker: {
+                                enabled: false
                             }
-                        },
-                        yAxis: [{
-                            min: 0,
-                            max: 100,
-                            title: {
-                                text: '利用率'
+                        }
+                    },
+                    series: [{
+                        name: 'cpu',
+                        yAxis: 0,
+                        data: function () {
+                            var res = [];
+                            for (var i = 0; i < data.length; i++) {
+                                res.push({
+                                    x: Date.parse(data[i].Time),
+                                    y: parseInt(data[i].Cpu.Utilization)
+                                });
                             }
-                        }, {
-                            opposite: true,
-                            labels: {
-                                formatter: function () {
-                                    return this.value + ' kb/s';
-                                }
-                            },
-                            title: {
-                                text: '网速Kbps'
+                            return res;
+                        }()
+                    }, {
+                        name: '内存',
+                        yAxis: 0,
+                        data: function () {
+                            var res = [];
+                            for (var i = 0; i < data.length; i++) {
+                                res.push({
+                                    x: Date.parse(data[i].Time),
+                                    y: parseInt(data[i].Ram.Utilization)
+                                });
                             }
-                        }, {
-                            opposite: true,
-                            title: {
-                                text: '数量'
+                            return res;
+                        }()
+                    }, {
+                        name: '下载速度',
+                        yAxis: 1,
+                        data: function () {
+                            var res = [];
+                            for (var i = 0; i < data.length; i++) {
+                                res.push({
+                                    x: Date.parse(data[i].Time),
+                                    y: parseInt(data[i].Net.Download)
+                                });
                             }
-                        }],
+                            return res;
+                        }()
+                    }, {
+                        name: '上传速度',
+                        yAxis: 1,
+                        data: function () {
+                            var res = [];
+                            for (var i = 0; i < data.length; i++) {
+                                res.push({
+                                    x: Date.parse(data[i].Time),
+                                    y: parseInt(data[i].Net.Upload)
+                                });
+                            }
+                            return res;
+                        }()
+                    }, {
+                        name: '进程',
+                        yAxis: 2,
+                        data: function () {
+                            var res = [];
+                            for (var i = 0; i < data.length; i++) {
+                                res.push({
+                                    x: Date.parse(data[i].Time),
+                                    y: data[i].Process.Number
+                                });
+                            }
+                            return res;
+                        }()
+                    }, {
+                        name: '线程',
+                        yAxis: 2,
+                        data: function () {
+                            var res = [];
+                            for (var i = 0; i < data.length; i++) {
+                                res.push({
+                                    x: Date.parse(data[i].Time),
+                                    y: data[i].Thread.Number
+                                });
+                            }
+                            return res;
+                        }()
+                    }]
+                });
+                $('#temperature').highcharts({
+                    chart: {
+                        type: 'gauge',
+                        backgroundColor: null,
+                        plotBackgroundColor: null,
+                        plotBackgroundImage: null,
+                        plotBorderWidth: 0,
+                        plotShadow: false
+                    },
 
-                        plotOptions:
-                        {
-                            spline: {
-                                lineWidth: 1,
-                                marker: {
-                                    enabled: false
-                                }
+                    title: {
+                        text: 'cpu温度'
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    pane: {
+                        startAngle: -150,
+                        endAngle: 150,
+                        background: [{
+                            backgroundColor: {
+                                linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+                                stops: [
+                                    [0, '#FFF'],
+                                    [1, '#333']
+                                ]
+                            },
+                            borderWidth: 0,
+                            outerRadius: '109%'
+                        }, {
+                            backgroundColor: {
+                                linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+                                stops: [
+                                    [0, '#333'],
+                                    [1, '#FFF']
+                                ]
+                            },
+                            borderWidth: 1,
+                            outerRadius: '107%'
+                        }, {
+                            // default background
+                        }, {
+                            backgroundColor: '#DDD',
+                            borderWidth: 0,
+                            outerRadius: '105%',
+                            innerRadius: '103%'
+                        }]
+                    },
+
+                    // the value axis
+                    yAxis: {
+                        min: 0,
+                        max: 120,
+
+                        minorTickInterval: 'auto',
+                        minorTickWidth: 1,
+                        minorTickLength: 10,
+                        minorTickPosition: 'inside',
+                        minorTickColor: '#666',
+
+                        tickPixelInterval: 30,
+                        tickWidth: 2,
+                        tickPosition: 'inside',
+                        tickLength: 10,
+                        tickColor: '#666',
+                        labels: {
+                            step: 2,
+                            rotation: 'auto',
+                            color: '#2D2D2F',
+                            style: {
+                                color: '#2D2D2F'
                             }
                         },
-                        series: [{
-                            name: 'cpu',
-                            yAxis: 0,
-                            data: function () {
-                                var res = [];
-                                for (var i = 0; i < data.length; i++) {
-                                    res.push({
-                                        x: Date.parse(data[i].Time),
-                                        y: parseInt(data[i].Cpu.Utilization)
-                                    });
-                                }
-                                return res;
-                            }()
+                        title: {
+                            text: '℃'
+                        },
+                        plotBands: [{
+                            from: 0,
+                            to: 70,
+                            color: '#55BF3B' // green
                         }, {
-                            name: '内存',
-                            yAxis: 0,
-                            data: function () {
-                                var res = [];
-                                for (var i = 0; i < data.length; i++) {
-                                    res.push({
-                                        x: Date.parse(data[i].Time),
-                                        y: parseInt(data[i].Ram.Utilization)
-                                    });
-                                }
-                                return res;
-                            }()
+                            from: 70,
+                            to: 100,
+                            color: '#DDDF0D' // yellow
                         }, {
-                            name: '下载速度',
-                            yAxis: 1,
-                            data: function () {
-                                var res = [];
-                                for (var i = 0; i < data.length; i++) {
-                                    res.push({
-                                        x: Date.parse(data[i].Time),
-                                        y: parseInt(data[i].Net.Download)
-                                    });
-                                }
-                                return res;
-                            }()
-                        }, {
-                            name: '上传速度',
-                            yAxis: 1,
-                            data: function () {
-                                var res = [];
-                                for (var i = 0; i < data.length; i++) {
-                                    res.push({
-                                        x: Date.parse(data[i].Time),
-                                        y: parseInt(data[i].Net.Upload)
-                                    });
-                                }
-                                return res;
-                            }()
-                        }, {
-                            name: '进程',
-                            yAxis: 2,
-                            data: function () {
-                                var res = [];
-                                for (var i = 0; i < data.length; i++) {
-                                    res.push({
-                                        x: Date.parse(data[i].Time),
-                                        y: data[i].Process.Number
-                                    });
-                                }
-                                return res;
-                            }()
-                        }, {
-                            name: '线程',
-                            yAxis: 2,
-                            data: function () {
-                                var res = [];
-                                for (var i = 0; i < data.length; i++) {
-                                    res.push({
-                                        x: Date.parse(data[i].Time),
-                                        y: data[i].Thread.Number
-                                    });
-                                }
-                                return res;
-                            }()
+                            from: 100,
+                            to: 120,
+                            color: '#DF5353' // red
                         }]
-                    });
+                    },
+
+                    series: [{
+                        name: 'temperature',
+                        data: [50],
+                        tooltip: {
+                            valueSuffix: ' ℃'
+                        }
+                    }]
+                });
             }
 
             function updateChart(data) {
@@ -198,6 +298,7 @@
                     vue.upload = parseInt(data.Net.Upload);
                     vue.process = data.Process.Number;
                     vue.thread = data.Thread.Number;
+                    vue.cpuTemperature = data.Temperature.Cpu;
                     var series = chart.series;
                     series[0].addPoint([Date.parse(data.Time), parseInt(data.Cpu.Utilization)], true, true);
                     series[1].addPoint([Date.parse(data.Time), parseInt(data.Ram.Utilization)], true, true);
@@ -205,6 +306,10 @@
                     series[3].addPoint([Date.parse(data.Time), parseInt(data.Net.Upload)], true, true);
                     series[4].addPoint([Date.parse(data.Time), data.Process.Number], true, true);
                     series[5].addPoint([Date.parse(data.Time), data.Thread.Number], true, true);
+                    var t = $('#temperature').highcharts();
+                    if (t) {
+                        t.series[0].points[0].update(data.Temperature.Cpu);
+                    }
                 }
             }
         });
@@ -212,22 +317,26 @@
 }
 <ul id="text-show" style="margin-top: 10px;">
     <li style="display: inline;">
-        <i class="fa fa-chrome"></i>cpu:{{cpu}}%
+        <i class="fa fa-chrome"></i>cpu利用率:{{cpu}}%
     </li>
     <li style="display: inline;">
-        <i class="fa fa-chrome"></i>内存:{{ram}}%
+        <i class="fa fa-chrome"></i>内存使用率:{{ram}}%
     </li>
     <li style="display: inline;">
-        <i class="fa fa-chrome"></i>下载:{{download}} kb/s
+        <i class="fa fa-chrome"></i>下载速度:{{download}} kb/s
     </li>
     <li style="display: inline;">
-        <i class="fa fa-chrome"></i>上传:{{upload}} kb/s
+        <i class="fa fa-chrome"></i>上传速度:{{upload}} kb/s
     </li>
     <li style="display: inline;">
-        <i class="fa fa-chrome"></i>进程:{{process}}
+        <i class="fa fa-chrome"></i>进程数:{{process}}
     </li>
     <li style="display: inline;">
-        <i class="fa fa-chrome"></i>线程:{{thread}}
+        <i class="fa fa-chrome"></i>线程数:{{thread}}
+    </li>
+    <li style="display: inline;">
+        <i class="fa fa-chrome"></i>cpu温度:{{cpuTemperature}}℃
     </li>
 </ul>
 <div id="chart" style="height:800px;width:100%;"></div>
+<div id="temperature" style="height:250px;width:250px;position:absolute;top:92px;right:200px;"></div>

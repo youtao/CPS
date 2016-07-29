@@ -75,7 +75,7 @@ namespace WebUI.SignalR
     {
         private static readonly Lazy<Broadcaster> _instance = new Lazy<Broadcaster>(() => new Broadcaster());
 
-        private readonly TimeSpan interval = TimeSpan.FromSeconds(2);
+        private readonly TimeSpan interval = TimeSpan.FromSeconds(1);
 
         private readonly IHubContext hubContext;
 

@@ -54,6 +54,10 @@ namespace Service
                         Net = new Net()
                         {
                             Measurement = "Kbps"
+                        },
+                        Temperature = new Temperature()
+                        {
+                            Cpu = computer.CpuTemperature
                         }
                     };
 

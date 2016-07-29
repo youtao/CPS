@@ -8,6 +8,7 @@ using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using Model;
 using Calculate;
+using System.Management;
 
 namespace MongoConsole
 {
@@ -56,6 +57,10 @@ namespace MongoConsole
                         Net = new Net()
                         {
                             Measurement = "Kbps"
+                        },
+                        Temperature = new Temperature()
+                        {
+                            Cpu = computer.CpuTemperature
                         }
                     };
 
@@ -91,8 +96,20 @@ namespace MongoConsole
                 }
             }).Start();
 
+            //string cpuTemperature = "MSAcpi_ThermalZoneTemperature";
+            //string diskTemperature = "MSStorageDriver_ATAPISmartData";
 
-            Console.ReadKey();
+
+            //ManagementObjectSearcher management = new ManagementObjectSearcher(@"root\WMI", "Select * From " + cpuTemperature);
+            //while (true)
+            //{
+            //    foreach (var item in management.Get())
+            //    {
+            //        var t = (Convert.ToDouble(item.GetPropertyValue("CurrentTemperature").ToString()) - 2732d) / 10d;
+            //        Console.WriteLine(t);
+            //    }
+            //    System.Threading.Thread.Sleep(TimeSpan.FromSeconds(1));
+            //}
         }
     }
 }

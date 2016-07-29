@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,6 +15,8 @@ namespace Calculate
 
         private ComputerInfo computerInfo;
 
+        ManagementObjectSearcher management;
+
         private NetworkMonitor networkMonitor;
 
         private List<NetworkAdapter> networkAdapters;
@@ -23,7 +26,7 @@ namespace Calculate
             pc = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             pc.ReadOnly = true;
             computerInfo = new ComputerInfo();
-
+            management = new ManagementObjectSearcher(@"root\WMI", "Select * From MSAcpi_ThermalZoneTemperature");
             networkMonitor = new NetworkMonitor();
             networkAdapters = networkMonitor.Adapters;
             foreach (NetworkAdapter adapter in networkAdapters)
@@ -36,6 +39,20 @@ namespace Calculate
         /// cpu利用率
         /// </summary>
         public float CpuUtilization => pc.NextValue();
+
+        public double CpuTemperature
+        {
+            get
+            {
+                var t = 0d;
+                foreach (var item in management.Get())
+                {
+                    t = (Convert.ToDouble(item.GetPropertyValue("CurrentTemperature").ToString()) - 2732d) / 10d;
+                }
+                return t;
+            }
+        }
+
 
         /// <summary>
         /// 内存使用率

@@ -27,6 +27,8 @@ namespace Model
         public Thread Thread { get; set; }
 
         public Net Net { get; set; }
+
+        public Temperature Temperature { get; set; }
     }
 
     public class Cpu
@@ -62,6 +64,12 @@ namespace Model
         public string Name { get; set; }
         public double Download { get; set; }
         public double Upload { get; set; }
+    }
+
+
+    public class Temperature
+    {
+        public double Cpu { get; set; }
     }
 
 }
